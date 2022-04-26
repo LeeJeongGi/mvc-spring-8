@@ -2,6 +2,7 @@ package hello.login.web;
 
 import hello.login.domain.member.Member;
 import hello.login.domain.member.MemberRepository;
+import hello.login.web.session.SessionManager;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Controller;
@@ -11,6 +12,7 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 
 import javax.servlet.http.Cookie;
+import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.util.Optional;
 
@@ -20,6 +22,7 @@ import java.util.Optional;
 public class HomeController {
 
     private final MemberRepository memberRepository;
+    private final SessionManager sessionManager;
 
 
     //    @GetMapping("/")
@@ -27,7 +30,7 @@ public class HomeController {
         return "home";
     }
 
-    @GetMapping("/")
+//    @GetMapping("/")
     public String homeLogin(@CookieValue(name = "memberId", required = false) Long memberId, Model model) {
 
         if (memberId == null) {
@@ -43,17 +46,20 @@ public class HomeController {
 
         return "loginHome";
     }
+    @GetMapping("/")
+    public String homeLoginV2(HttpServletRequest request, Model model) {
 
-    @PostMapping("/logout")
-    public String logout(HttpServletResponse response) {
-        expireCookie(response);
+        //세션 관리자에 저장된 회원정보 저장
 
-        return "redirect:/";
-    }
+        Member member = (Member) sessionManager.getSession(request);
 
-    private void expireCookie(HttpServletResponse response) {
-        Cookie cookie = new Cookie("memberId", null);
-        cookie.setMaxAge(0);
-        response.addCookie(cookie);
+        //로그인
+        if (member == null) {
+            return "home";
+        }
+
+        model.addAttribute("member", member);
+
+        return "loginHome";
     }
 }
